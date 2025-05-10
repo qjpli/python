@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 from mlxtend.frequent_patterns import apriori, association_rules
 import pandas as pd
 
@@ -46,8 +46,23 @@ class AssociationTab:
         generate_button.pack(pady=15)
 
         # Results Label
-        self.results_label = tk.Label(scroll_frame, text="", font=('helvetica', 12), wraplength=600, justify="left")
+        self.results_label = tk.Label(scroll_frame, text="Results will appear below:", font=('helvetica', 12), wraplength=600, justify="left")
         self.results_label.pack(padx=10, pady=10)
+
+        # Treeview for displaying results in a table
+        self.tree = ttk.Treeview(scroll_frame, columns=('Antecedents', 'Consequents', 'Support', 'Confidence'), show='headings')
+        self.tree.heading('Antecedents', text='Antecedents')
+        self.tree.heading('Consequents', text='Consequents')
+        self.tree.heading('Support', text='Support')
+        self.tree.heading('Confidence', text='Confidence')
+
+        # Set column widths
+        self.tree.column('Antecedents', width=150)
+        self.tree.column('Consequents', width=150)
+        self.tree.column('Support', width=100)
+        self.tree.column('Confidence', width=100)
+
+        self.tree.pack(fill="both", expand=True)
 
         # Spacer for better scrolling experience
         spacer = tk.Frame(scroll_frame, height=50)
@@ -83,11 +98,22 @@ class AssociationTab:
             frequent_itemsets = apriori(df_encoded, min_support=min_support, use_colnames=True)
             rules = association_rules(frequent_itemsets, metric="confidence", min_threshold=0.5)
 
+            # Clear the table before displaying new results
+            for row in self.tree.get_children():
+                self.tree.delete(row)
+
             # Display results
             if rules.empty:
                 self.results_label.config(text="No rules found with the given support.")
             else:
-                self.results_label.config(text=rules[['antecedents', 'consequents', 'support', 'confidence']].to_string(index=False))
+                for _, rule in rules.iterrows():
+                    antecedents = ', '.join(list(rule['antecedents']))
+                    consequents = ', '.join(list(rule['consequents']))
+                    support = rule['support']
+                    confidence = rule['confidence']
+
+                    # Insert the rule into the table
+                    self.tree.insert('', 'end', values=(antecedents, consequents, f'{support:.3f}', f'{confidence:.3f}'))
 
         except Exception as e:
             messagebox.showerror("Error", str(e))
