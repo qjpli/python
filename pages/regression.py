@@ -12,41 +12,68 @@ class RegressionTab:
         self.create_tab(notebook)
 
     def create_tab(self, notebook):
-        regression_frame = tk.Frame(notebook)
-        notebook.add(regression_frame, text="Regression")
+        # Main frame for the tab
+        main_frame = tk.Frame(notebook)
+        notebook.add(main_frame, text="Regression")
 
-        label = tk.Label(regression_frame, text="Regression Model", font=('helvetica', 14))
-        label.pack(pady=10)
-        
+        # Scrollable frame setup
+        canvas = tk.Canvas(main_frame)
+        scrollbar = tk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+        scroll_frame = tk.Frame(canvas)
+
+        scroll_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+
+        self.scrollable_window = canvas.create_window((0, 0), window=scroll_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Pack the canvas and scrollbar
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        # Add Widgets
+        title_label = tk.Label(scroll_frame, text="Regression Model", font=('helvetica', 16, 'bold'))
+        title_label.pack(pady=15)
+
         # Feature Selection
         self.feature_list = list(self.df.columns)
-        features_label = tk.Label(regression_frame, text="Select Features (comma-separated):")
-        features_label.pack()
-        self.features_entry = tk.Entry(regression_frame)
-        self.features_entry.pack(pady=5)
+        features_label = tk.Label(scroll_frame, text="Select Features (comma-separated):", font=('helvetica', 12))
+        features_label.pack(anchor="w", padx=10)
+        
+        self.features_entry = tk.Entry(scroll_frame, font=('helvetica', 12), width=50)
+        self.features_entry.pack(fill="x", padx=10, pady=5)
 
         # Target Selection
-        target_label = tk.Label(regression_frame, text="Select Target Column:")
-        target_label.pack()
-        self.target_dropdown = ttk.Combobox(regression_frame, values=self.feature_list)
-        self.target_dropdown.pack(pady=5)
+        target_label = tk.Label(scroll_frame, text="Select Target Column:", font=('helvetica', 12))
+        target_label.pack(anchor="w", padx=10)
+        
+        self.target_dropdown = ttk.Combobox(scroll_frame, values=self.feature_list, font=('helvetica', 12), width=50)
+        self.target_dropdown.pack(fill="x", padx=10, pady=5)
 
         # Train Button
-        train_button = tk.Button(regression_frame, text='Train Model', command=self.train_model, bg='green', fg='white', font=('helvetica', 10, 'bold'))
-        train_button.pack(pady=10)
+        train_button = tk.Button(scroll_frame, text='Train Model', command=self.train_model, bg='green', fg='white', font=('helvetica', 12, 'bold'))
+        train_button.pack(pady=15)
 
         # Results Label
-        self.results_label = tk.Label(regression_frame, text="", font=('helvetica', 10))
-        self.results_label.pack(pady=10)
+        self.results_label = tk.Label(scroll_frame, text="", font=('helvetica', 12), wraplength=600, justify="left")
+        self.results_label.pack(padx=10, pady=10)
 
         # Interpretation Label
-        self.interpretation_label = tk.Label(regression_frame, text="", font=('helvetica', 10), wraplength=400, justify='left')
-        self.interpretation_label.pack(pady=10)
+        self.interpretation_label = tk.Label(scroll_frame, text="", font=('helvetica', 12), wraplength=600, justify="left")
+        self.interpretation_label.pack(padx=10, pady=10)
 
-        # Allow window to resize when content grows
-        regression_frame.pack_propagate(False)  # Prevent resizing of frame to fit children
-        self.canvas_frame = tk.Frame(regression_frame)  # Frame to contain the plot
-        self.canvas_frame.pack(fill=tk.BOTH, expand=True)
+        # Plot Frame
+        self.canvas_frame = tk.Frame(scroll_frame)
+        self.canvas_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        # Spacer for better scrolling experience
+        spacer = tk.Frame(scroll_frame, height=50)
+        spacer.pack()
+
+        # Handle dynamic resizing
+        canvas.bind("<Configure>", lambda e: canvas.itemconfig(self.scrollable_window, width=e.width))
 
     def train_model(self):
         try:

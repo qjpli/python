@@ -12,33 +12,59 @@ class ClusteringTab:
         self.create_tab(notebook)
 
     def create_tab(self, notebook):
-        cluster_frame = tk.Frame(notebook)
-        notebook.add(cluster_frame, text="Clustering")
+        # Main frame for the tab
+        main_frame = tk.Frame(notebook)
+        notebook.add(main_frame, text="Clustering")
 
-        label = tk.Label(cluster_frame, text="K-Means Clustering", font=('helvetica', 14))
-        label.pack(pady=10)
+        # Scrollable frame setup
+        canvas = tk.Canvas(main_frame)
+        scrollbar = tk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+        scroll_frame = tk.Frame(canvas)
+
+        scroll_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+
+        self.scrollable_window = canvas.create_window((0, 0), window=scroll_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Pack the canvas and scrollbar
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        # Add Widgets to the scrollable frame
+        label = tk.Label(scroll_frame, text="K-Means Clustering", font=('helvetica', 16, 'bold'))
+        label.pack(pady=20)
 
         # Input for Number of Clusters
-        entry_label = tk.Label(cluster_frame, text="Number of Clusters:")
-        entry_label.pack()
-
-        self.cluster_entry = tk.Entry(cluster_frame)
-        self.cluster_entry.pack(pady=5)
+        entry_label = tk.Label(scroll_frame, text="Number of Clusters:", font=('helvetica', 12))
+        entry_label.pack(anchor="w", padx=10)
+        
+        self.cluster_entry = tk.Entry(scroll_frame, font=('helvetica', 12), width=50)
+        self.cluster_entry.pack(fill="x", padx=10, pady=5)
 
         # Button to run the clustering
-        process_button = Button(cluster_frame, text='Run K-Means', command=self.run_kmeans, bg='brown', fg='white', font=('helvetica', 10, 'bold'))
-        process_button.pack(pady=10)
+        process_button = Button(scroll_frame, text='Run K-Means', command=self.run_kmeans, bg='brown', fg='white', font=('helvetica', 12, 'bold'))
+        process_button.pack(pady=20)
 
         # Results and Interpretation Labels
-        self.results_label = tk.Label(cluster_frame, text="", font=('helvetica', 10))
+        self.results_label = tk.Label(scroll_frame, text="", font=('helvetica', 12))
         self.results_label.pack(pady=10)
 
-        self.interpretation_label = tk.Label(cluster_frame, text="", font=('helvetica', 10), wraplength=400, justify='left')
+        self.interpretation_label = tk.Label(scroll_frame, text="", font=('helvetica', 12), wraplength=400, justify='left')
         self.interpretation_label.pack(pady=10)
 
         # Frame to contain the plot
-        self.canvas_frame = tk.Frame(cluster_frame)
+        self.canvas_frame = tk.Frame(scroll_frame)
         self.canvas_frame.pack(fill=tk.BOTH, expand=True)
+
+        # Spacer for better scrolling experience
+        spacer = tk.Frame(scroll_frame, height=50)
+        spacer.pack()
+
+        # Handle dynamic resizing
+        canvas.bind("<Configure>", lambda e: canvas.itemconfig(self.scrollable_window, width=e.width))
 
     def run_kmeans(self):
         try:

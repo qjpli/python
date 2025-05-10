@@ -9,25 +9,52 @@ class AssociationTab:
         self.create_tab(notebook)
 
     def create_tab(self, notebook):
-        association_frame = tk.Frame(notebook)
-        notebook.add(association_frame, text="Association")
+        # Main frame for the tab
+        main_frame = tk.Frame(notebook)
+        notebook.add(main_frame, text="Association")
 
-        label = tk.Label(association_frame, text="Association Analysis", font=('helvetica', 14))
-        label.pack(pady=10)
-        
+        # Scrollable frame setup
+        canvas = tk.Canvas(main_frame)
+        scrollbar = tk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+        scroll_frame = tk.Frame(canvas)
+
+        scroll_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+
+        self.scrollable_window = canvas.create_window((0, 0), window=scroll_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Pack the canvas and scrollbar
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        # Add Widgets
+        title_label = tk.Label(scroll_frame, text="Association Analysis", font=('helvetica', 16, 'bold'))
+        title_label.pack(pady=15)
+
         # Minimum Support
-        support_label = tk.Label(association_frame, text="Enter Minimum Support (0.0 - 1.0):")
-        support_label.pack()
-        self.support_entry = tk.Entry(association_frame)
-        self.support_entry.pack(pady=5)
+        support_label = tk.Label(scroll_frame, text="Enter Minimum Support (0.0 - 1.0):", font=('helvetica', 12))
+        support_label.pack(anchor="w", padx=10)
+        
+        self.support_entry = tk.Entry(scroll_frame, font=('helvetica', 12), width=50)
+        self.support_entry.pack(fill="x", padx=10, pady=5)
 
         # Generate Rules Button
-        generate_button = tk.Button(association_frame, text='Generate Rules', command=self.generate_rules, bg='purple', fg='white', font=('helvetica', 10, 'bold'))
-        generate_button.pack(pady=10)
+        generate_button = tk.Button(scroll_frame, text='Generate Rules', command=self.generate_rules, bg='purple', fg='white', font=('helvetica', 12, 'bold'))
+        generate_button.pack(pady=15)
 
         # Results Label
-        self.results_label = tk.Label(association_frame, text="", font=('helvetica', 10))
-        self.results_label.pack(pady=10)
+        self.results_label = tk.Label(scroll_frame, text="", font=('helvetica', 12), wraplength=600, justify="left")
+        self.results_label.pack(padx=10, pady=10)
+
+        # Spacer for better scrolling experience
+        spacer = tk.Frame(scroll_frame, height=50)
+        spacer.pack()
+
+        # Handle dynamic resizing
+        canvas.bind("<Configure>", lambda e: canvas.itemconfig(self.scrollable_window, width=e.width))
 
     def generate_rules(self):
         try:
