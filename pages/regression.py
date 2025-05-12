@@ -1,8 +1,9 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
+import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
@@ -99,6 +100,12 @@ class RegressionTab:
             # Calculate metrics
             mse = mean_squared_error(y_test, predictions)
             r2 = r2_score(y_test, predictions)
+            mae = mean_absolute_error(y_test, predictions)
+            rmse = mse ** 0.5
+            corr_coeff = y_test.corr(pd.Series(predictions, index=y_test.index))
+            rae = (mae / y_test.mean()) * 100
+            rrse = (rmse / y_test.std()) * 100
+            n = len(y_test)
 
             # Plot the results
             fig, ax = plt.subplots(figsize=(6, 4))
@@ -116,8 +123,12 @@ class RegressionTab:
             canvas.draw()
             canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-            # Display results
-            self.results_label.config(text=f"MSE: {mse:.2f}\nR²: {r2:.2f}")
+            # Display all metrics
+            self.results_label.config(
+                text=f"MSE: {mse:.2f}\nR²: {r2:.2f}\nMAE: {mae:.2f}\nRMSE: {rmse:.2f}\n"
+                    f"Correlation Coefficient: {corr_coeff:.2f}\n"
+                    f"RAE: {rae:.2f}%\nRRSE: {rrse:.2f}%\nTotal Instances: {n}"
+            )
 
             # Interpretation Logic
             if r2 >= 0.9:
@@ -134,3 +145,4 @@ class RegressionTab:
 
         except Exception as e:
             messagebox.showerror("Error", str(e))
+

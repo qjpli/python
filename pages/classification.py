@@ -6,6 +6,7 @@ from sklearn.metrics import accuracy_score, classification_report
 from sklearn.preprocessing import LabelEncoder
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import pandas as pd
 
 class ClassificationTab:
     def __init__(self, notebook, df):
@@ -31,11 +32,9 @@ class ClassificationTab:
         self.scrollable_window = canvas.create_window((0, 0), window=scroll_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
 
-        # Pack the canvas and scrollbar
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-        # Add Widgets
         title_label = tk.Label(scroll_frame, text="Classification Model", font=('helvetica', 16, 'bold'))
         title_label.pack(pady=15)
 
@@ -98,10 +97,21 @@ class ClassificationTab:
                     le = LabelEncoder()
                     X[col] = le.fit_transform(X[col].astype(str))
 
+            # Create the target class labels (e.g., High, Medium, Low production)
+            def categorize_production(value):
+                if value < 5000:
+                    return 'Low'
+                elif value < 15000:
+                    return 'Medium'
+                else:
+                    return 'High'
+
+            # Apply categorization to the target column for classification
+            y = y.apply(categorize_production)
+
             # Encode target if it's categorical
-            if y.dtype == 'object':
-                target_encoder = LabelEncoder()
-                y = target_encoder.fit_transform(y.astype(str))
+            target_encoder = LabelEncoder()
+            y = target_encoder.fit_transform(y)
 
             # Train/test split
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
@@ -139,7 +149,7 @@ class ClassificationTab:
             self.results_label.config(text=f"Accuracy: {accuracy:.2f}\n\n{report}")
 
             # Interpretation Logic
-            if accuracy >= 0.9:
+            if accuracy >= 0.9: 
                 comment = "Excellent classification accuracy! The model is performing very well."
             elif accuracy >= 0.7:
                 comment = "Good classification accuracy. The model is performing well."
