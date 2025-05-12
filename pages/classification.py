@@ -149,7 +149,7 @@ class ClassificationTab:
             self.results_label.config(text=f"Accuracy: {accuracy:.2f}\n\n{report}")
 
             # Interpretation Logic
-            if accuracy >= 0.9: 
+            if accuracy >= 0.9:
                 comment = "Excellent classification accuracy! The model is performing very well."
             elif accuracy >= 0.7:
                 comment = "Good classification accuracy. The model is performing well."
